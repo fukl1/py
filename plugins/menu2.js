@@ -41,7 +41,7 @@ cmd({
                     header: 'Menu',
                     title: cat.charAt(0).toUpperCase() + cat.slice(1),
                     description: `ᴛʜɪs ɪs ғᴏʀ ${cat} ᴄᴏᴍᴍᴀɴᴅs`,
-                    buttonId: `${prefix}showmenu ${cat}`
+                    buttonId: `${prefix}showmenu`
                 }
             ]
         };
@@ -73,7 +73,7 @@ cmd({
 
     await conn.sendMessage(from, {
         image: { url: picUrl },
-        caption: "📋 *ᴍᴀɪɴ ᴍᴇɴᴜ*\n\nSelect ᴀ ᴄᴀᴛᴇɢᴏʀʏ ғʀᴏᴍ ᴛʜᴇ ᴍᴇɴᴜ ʙᴇʟᴏᴡ.",
+        caption: "📋 *ᴍᴀɪɴ ᴍᴇɴᴜ*\n\n> Select ᴀ ᴄᴀᴛᴇɢᴏʀʏ ғʀᴏᴍ ᴛʜᴇ ᴍᴇɴᴜ ʙᴇʟᴏᴡ.",
         footer: "> ɴᴇᴡ ᴍᴇɴᴜ - 2025",
         buttons: [
             {
