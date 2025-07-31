@@ -7,7 +7,7 @@ cmd(
         pattern: 'ainfo',
         alias: ['animeinfo', 'anidetails'],
         desc: 'Get anime information from MyAnimeList',
-        category: 'weeb',
+        category: 'search',
         react: '🌸',
         use: '<anime title>',
         filename: __filename,
