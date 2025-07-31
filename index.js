@@ -335,7 +335,7 @@ conn.ev.on('messages.upsert', async (msg) => {
 
     const quoted = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
     if (!quoted) {
-      await conn.sendMessage(from, { text: "*🎐 ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴀ sᴛᴀᴛᴜs!*" }, { quoted: m });
+      await conn.sendMessage(from, { text: "> *😉 ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴀ sᴛᴀᴛᴜs!*" }, { quoted: m });
       return;
     }
 
@@ -484,7 +484,7 @@ registerAntiNewsletter(conn);
                 updateActivity(from, sender);
 	  }
 	  // اینجا یک آرایه قرار می‌دهیم
-  const ownerFilev2 = JSON.parse(fs.readFileSync('./lib/owner.json', 'utf-8'));  
+  const ownerFilev2 = JSON.parse(fs.readFileSync('./lib/sudo.json', 'utf-8'));  
   let isCreator = [udp, ...davex, config.DEV + '@s.whatsapp.net', ...ownerFilev2]
     .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net') // اطمینان حاصل کنید که شماره‌ها به فرمت صحیح تبدیل شده‌اند
     .includes(mek.sender);
@@ -583,7 +583,7 @@ const isBanned = bannedUsers.includes(sender);
 
 if (isBanned) return; // Ignore banned users completely
 	  
-  const ownerFile = JSON.parse(fs.readFileSync('./lib/owner.json', 'utf-8'));  // خواندن فایل
+  const ownerFile = JSON.parse(fs.readFileSync('./lib/sudo.json', 'utf-8'));  // خواندن فایل
   const ownerNumberFormatted = `${config.OWNER_NUMBER}@s.whatsapp.net`;
   // بررسی اینکه آیا فرستنده در owner.json موجود است
   const isFileOwner = ownerFile.includes(sender);
