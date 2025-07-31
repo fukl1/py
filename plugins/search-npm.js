@@ -2,52 +2,63 @@ const axios = require("axios");
 const { cmd } = require("../command");
 
 cmd({
-  pattern: "npm2",
-  desc: "Search for a package on npm.",
-  react: '📦',
-  category: "search",
-  filename: __filename,
-  use: ".npm <package-name>"
-}, async (conn, mek, msg, { from, args, reply }) => {
-  try {
-    // Check if a package name is provided
-    if (!args.length) {
-      return reply("Please provide the name of the npm package you want to search for. Example: .npm express");
+    pattern: "npm",
+    alias: ["npmpkg", "npmsearch"],
+    react: "📦",
+    desc: "Search for NPM packages",
+    category: "search",
+    use: ".npm <package-name>",
+    filename: __filename
+}, async (conn, m, mek, { from, q, reply }) => {
+    try {
+        if (!q) return reply("❌ ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴀɴ ɴᴘᴍ ᴘᴀᴄᴋᴀɢᴇ ɴᴀᴍᴇ!");
+
+        const processingMsg = await reply("🔍 sᴇᴀʀᴄʜɪɴɢ ɴᴘᴍ ʀᴇɢɪsᴛʀʏ...");
+
+        const apiUrl = `https://api.giftedtech.web.id/api/search/npmsearch?apikey=gifted&packagename=${encodeURIComponent(q)}`;
+        const response = await axios.get(apiUrl, { timeout: 10000 });
+
+        if (!response.data?.success || !response.data?.result) {
+            return reply("❌ ᴘᴀᴄᴋᴀɢᴇ ɴᴏᴛ ғᴏᴜɴᴅ ᴏʀ ᴀᴘɪ ᴇʀʀᴏʀ");
+        }
+
+        const pkg = response.data.result;
+        
+        let message = `📦 \`𝐍𝐏𝐌 𝐏𝐀𝐂𝐊𝐀𝐆𝐄 𝐈𝐍𝐅𝐎\` \n\n` +
+                     `✨ *ɴᴀᴍᴇ:* ${pkg.name || "N/A"}\n` +
+                     `📝 *ᴅᴇsᴄʀɪᴘᴛɪᴏɴ:* ${pkg.description || "N/A"}\n` +
+                     `🏷️ *ᴠᴇʀsɪᴏɴ:* ${pkg.version || "N/A"}\n` +
+                     `📅 *ᴘᴜʙʟɪsʜᴇᴅ:* ${pkg.publishedDate || "N/A"}\n` +
+                     `👤 *ᴏᴡɴᴇʀ:* ${pkg.owner || "N/A"}\n` +
+                     `📜 *ʟɪᴄᴇɴsᴇ:* ${pkg.license || "N/A"}\n\n` +
+                     `🔗 *ᴘᴀᴄᴋᴀɢᴇ ʟɪɴᴋ:* ${pkg.packageLink || "N/A"}\n` +
+                     `🏠 *ʜᴏᴍᴇᴘᴀɢᴇ:* ${pkg.homepage || "N/A"}\n` +
+                     `📥 *ᴅᴏᴡɴʟᴏᴀᴅ:* ${pkg.downloadLink || "N/A"}\n\n`;
+
+        if (pkg.keywords?.length > 0) {
+            message += `🏷️ *ᴋᴇʏᴡᴏʀᴅs:* ${pkg.keywords.join(", ")}\n`;
+        }
+
+        message += `\n> ɢᴇɴᴇʀᴀᴛᴇᴅ ʙʏ ᴅʏʙʏ ᴛᴇᴄʜ`;
+
+        // Send the result
+        await conn.sendMessage(from, { 
+            text: message,
+            contextInfo: {
+                externalAdReply: {
+                    title: pkg.name,
+                    body: pkg.description || "NPM package",
+                    thumbnail: await (await axios.get('https://files.catbox.moe/w1l8b0.jpg', { responseType: 'arraybuffer' })).data,
+                    sourceUrl: pkg.packageLink || "https://www.npmjs.com"
+                }
+            }
+        }, { quoted: mek });
+
+        // Delete processing message
+        await conn.sendMessage(from, { delete: processingMsg.key });
+
+    } catch (error) {
+        console.error("NPM search error:", error);
+       // reply(`❌ Error: ${error.response?.status === 404 ? "Package not found" : "Search failed"}`);
     }
-
-    const packageName = args.join(" ");
-    const apiUrl = `https://registry.npmjs.org/${encodeURIComponent(packageName)}`;
-
-    // Fetch package details from npm registry
-    const response = await axios.get(apiUrl);
-    if (response.status !== 200) {
-      throw new Error("Package not found or an error occurred.");
-    }
-
-    const packageData = response.data;
-    const latestVersion = packageData["dist-tags"].latest;
-    const description = packageData.description || "No description available.";
-    const npmUrl = `https://www.npmjs.com/package/${packageName}`;
-    const license = packageData.license || "Unknown";
-    const repository = packageData.repository ? packageData.repository.url : "Not available";
-
-    // Create the response message
-    const message = `
-*X-BOT-MD NPM SEARCH*
-
-*🔰 NPM PACKAGE:* ${packageName}
-*📄 DESCRIPTION:* ${description}
-*⏸️ LAST VERSION:* ${latestVersion}
-*🪪 LICENSE:* ${license}
-*🪩 REPOSITORY:* ${repository}
-*🔗 NPM URL:* ${npmUrl}
-`;
-
-    // Send the message
-    await conn.sendMessage(from, { text: message }, { quoted: mek });
-
-  } catch (error) {
-    console.error("Error:", error);
-    reply("An error occurred: " + error.message);
-  }
 });
