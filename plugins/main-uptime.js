@@ -20,7 +20,7 @@ cmd({
   alias: ["uptime", "run"],
   react: "⏳",
   desc: "Show bot alive status and uptime",
-  category: "system",
+  category: "main",
   filename: __filename
 }, async (client, message, args, { reply }) => {
   try {
