@@ -11,7 +11,7 @@ const path = require('path');
 
 
 
-const OWNER_PATH = path.join(__dirname, "../lib/owner.json");
+const OWNER_PATH = path.join(__dirname, "../lib/sudo.json");
 
 // مطمئن شو فایل owner.json هست
 const ensureOwnerFile = () => {
