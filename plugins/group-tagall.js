@@ -1,58 +1,58 @@
-const config = require('../config');
-const { cmd } = require('../command');
-const { getGroupAdmins } = require('../lib/functions');
+const config = require('../config')
+const { cmd, commands } = require('../command')
+const { getBuffer, getGroupAdmins, getRandom, h2k, isUrl, Json, runtime, sleep, fetchJson } = require('../lib/functions')
 
 cmd({
     pattern: "tagall",
-    alias: ["gc_tagall"],
     react: "🔊",
-    desc: "Tag all group members",
+    alias: ["gc_tagall"],
+    desc: "To Tag all Members",
     category: "group",
-    use: '.tagall [ᴍᴇssᴀɢᴇ]',
+    use: '.tagall [message]',
     filename: __filename
-}, async (conn, m, msg, {
-    from,
-    participants,
-    reply,
-    isGroup,
-    senderNumber,
-    groupAdmins,
-    command,
-    body
-}) => {
+},
+async (conn, mek, m, { from, participants, reply, isGroup, isAdmins, isCreator, prefix, command, args, body }) => {
     try {
-        if (!isGroup) return reply("❌ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ɪs ᴏɴʟʏ ғᴏʀ ɢʀᴏᴜᴘs.");
-
-        const botOwner = conn.user.id.split(':')[0];
-        const senderJid = senderNumber + "@s.whatsapp.net";
-        const isAllowed = groupAdmins.includes(senderJid) || senderNumber === botOwner;
-
-        if (!isAllowed) return reply("❌ ᴏɴʟʏ ɢʀᴏᴜᴘ ᴀᴅᴍɪɴs ᴏʀ ʙᴏᴛ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs.");
-
-        const groupMeta = await conn.groupMetadata(from).catch(() => null);
-        if (!groupMeta) return reply("❌ ᴄᴏᴜʟᴅɴ'ᴛ ғᴇᴛᴄʜ ɢʀᴏᴜᴘ ɪɴғᴏ.");
-
-        const groupName = groupMeta.subject || "Group";
-        const total = participants.length || 0;
-        const emojis = ['📢', '🔊', '🌐', '🔰', '💥', '🧨', '🚨', '⚠️', '🔥', '🎯'];
-        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-
-        let text = body.slice(body.indexOf(command) + command.length).trim();
-        if (!text) text = "ᴛᴀɢɢɪɴɢ ᴇᴠᴇʀʏᴏɴᴇ...";
-
-        let caption = `▢ ɢʀᴏᴜᴘ: *${groupName}*\n▢ ᴍᴇᴍʙᴇʀs: *${total}*\n▢ ᴍᴇssᴀɢᴇ: *${text}*\n\n┌───⊷ *ᴍᴇɴᴛɪᴏɴs*\n`;
-        for (let u of participants) {
-            caption += `${emoji} @${u.id.split("@")[0]}\n`;
+        // ✅ Group check
+        if (!isGroup) {
+            await conn.sendMessage(from, { react: { text: '❌', key: m.key } });
+            return reply("❌ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ᴄᴀɴ ᴏɴʟʏ ʙᴇ ᴜsᴇᴅ ɪɴ ɢʀᴏᴜᴘs.");
         }
-        caption += "└── ᴍᴇɢᴀʟᴏᴅᴏɴ-ᴍᴅ ʙᴏᴛ";
 
-        await conn.sendMessage(from, {
-            text: caption,
-            mentions: participants.map(p => p.id)
-        }, { quoted: m });
+        // ✅ Permission check (Admin OR Bot Owner)
+        if (!isAdmins && !isCreator) {
+            await conn.sendMessage(from, { react: { text: '❌', key: m.key } });
+            return reply("❌ ᴏɴʟʏ ɢʀᴏᴜᴘ ᴀᴅᴍɪɴs ᴏʀ ᴛʜᴇ ʙᴏᴛ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.");
+        }
 
-    } catch (err) {
-        console.error("❌ tagall error:", err);
-        reply("❌ Error: " + (err.message || err));
+        // ✅ Fetch group info
+        let groupInfo = await conn.groupMetadata(from).catch(() => null);
+        if (!groupInfo) return reply("❌ ғᴀɪʟᴇᴅ ᴛᴏ ғᴇᴛᴄʜ ɢʀᴏᴜᴘ ɪɴғᴏʀᴍᴀᴛɪᴏɴ.");
+
+        let groupName = groupInfo.subject || "Unknown Group";
+        let totalMembers = participants ? participants.length : 0;
+        if (totalMembers === 0) return reply("❌ ɴᴏ ᴍᴇᴍʙᴇʀs ғᴏᴜɴᴅ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.");
+
+        let emojis = ['📢', '🔊', '🌐', '🔰', '❤‍🩹', '🤍', '🖤', '🩵', '📝', '💗', '🔖', '🪩', '📦', '🎉', '🛡️', '💸', '⏳', '🗿', '🚀', '🎧', '🪀', '⚡', '🚩', '🍁', '🗣️', '👻', '⚠️', '🔥'];
+        let randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+        // ✅ Extract message
+        let message = body.slice(body.indexOf(command) + command.length).trim();
+        if (!message) message = "ᴀᴛᴛᴇɴᴛɪᴏɴ ᴇᴠᴇʀʏᴏɴᴇ";
+
+        let teks = `▢ ɢʀᴏᴜᴘ : *${groupName}*\n▢ ᴍᴇᴍʙᴇʀs : *${totalMembers}*\n▢ ᴍᴇssᴀɢᴇ: *${message}*\n\n┌───⊷ *ᴍᴇɴᴛɪᴏɴs*\n`;
+
+        for (let mem of participants) {
+            if (!mem.id) continue;
+            teks += `${randomEmoji} @${mem.id.split('@')[0]}\n`;
+        }
+
+        teks += "└──ᴍᴇɢᴀʟᴏᴅᴏɴ-ᴍᴅ──";
+
+        conn.sendMessage(from, { text: teks, mentions: participants.map(a => a.id) }, { quoted: mek });
+
+    } catch (e) {
+        console.error("TagAll Error:", e);
+        reply(`❌ *Error Occurred !!*\n\n${e.message || e}`);
     }
 });
