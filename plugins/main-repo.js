@@ -6,7 +6,7 @@ cmd({
     alias: ["sc", "script", "info"],
     desc: "Obtenir les infos du dépôt GitHub",
     react: "📂",
-    category: "info",
+    category: "main",
     filename: __filename,
 },
 async (conn, mek, m, { from, reply }) => {
